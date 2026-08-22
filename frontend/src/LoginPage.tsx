@@ -10,12 +10,13 @@ export default function LoginPage() {
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    if (email === 'admin@123' && password === '12345') {
+    const validEmails = ['admin@123', 'employee@123', 'citizen@123'];
+    if (validEmails.includes(email) && password === '12345') {
       // Mock successful login
-      alert('Login successful! Redirecting...');
+      alert(`Login successful as ${email.split('@')[0]}! Redirecting...`);
       navigate('/');
     } else {
-      setError('Invalid email or password. Hint: admin@123 / 12345');
+      setError('Invalid email or password. Hint: admin@123, employee@123, or citizen@123 / 12345');
     }
   };
 
@@ -55,7 +56,7 @@ export default function LoginPage() {
                 id="email" 
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="admin@123" 
+                placeholder="admin@123, employee@123, citizen@123" 
                 className="w-full bg-gray-50 dark:bg-[#0a0c10]/50 border border-gray-300 dark:border-white/10 rounded-xl px-4 py-3 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-600 focus:outline-none focus:border-fuchsia-500/50 focus:ring-1 focus:ring-fuchsia-500/50 transition-all"
                 required
               />
