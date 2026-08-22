@@ -65,7 +65,6 @@ function LandingPage() {
           
           <nav className="hidden md:flex items-center gap-8 text-sm font-medium text-gray-600 dark:text-gray-400">
             <a href="#features" className="hover:text-gray-900 dark:hover:text-white transition-colors">Features</a>
-            <a href="#how-it-works" className="hover:text-gray-900 dark:hover:text-white transition-colors">How it Works</a>
             <a href="#faq" className="hover:text-gray-900 dark:hover:text-white transition-colors">FAQ</a>
           </nav>
 
@@ -99,12 +98,12 @@ function LandingPage() {
           </p>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-6 w-full mt-4">
-            <button className="w-full sm:w-auto bg-gradient-to-r from-[#6366f1] to-[#8b5cf6] hover:from-[#4f46e5] hover:to-[#7c3aed] text-white font-semibold px-8 py-3.5 rounded-full flex items-center justify-center transition-all shadow-lg shadow-indigo-500/25">
+            <Link to="/signup" className="w-full sm:w-auto bg-gradient-to-r from-[#6366f1] to-[#8b5cf6] hover:from-[#4f46e5] hover:to-[#7c3aed] text-white font-semibold px-8 py-3.5 rounded-full flex items-center justify-center transition-all shadow-lg shadow-indigo-500/25">
               Start for Free
-            </button>
-            <button className="w-full sm:w-auto bg-gradient-to-r from-[#d946ef] to-[#a855f7] hover:from-[#c026d3] hover:to-[#9333ea] text-white font-semibold px-8 py-3.5 rounded-full flex items-center justify-center transition-all shadow-lg shadow-fuchsia-500/25">
-              Book a Demo
-            </button>
+            </Link>
+            <Link to="/contact" className="w-full sm:w-auto bg-gradient-to-r from-[#d946ef] to-[#a855f7] hover:from-[#c026d3] hover:to-[#9333ea] text-white font-semibold px-8 py-3.5 rounded-full flex items-center justify-center transition-all shadow-lg shadow-fuchsia-500/25">
+              Contact Us
+            </Link>
           </div>
         </div>
 
