@@ -613,13 +613,13 @@ export default function App() {
       <Route path="/signup" element={<SignupPage />} />
       
       {/* Employee Routes */}
-      <Route path="/employee" element={<EmployeeLayout />}>
-        <Route path="dashboard" element={<Dashboard />} />
-        <Route path="requests" element={<MyRequests />} />
-        <Route path="requests/:id" element={<RequestDetails />} />
-        <Route path="at-risk" element={<AtRisk />} />
-        <Route path="notifications" element={<Notifications />} />
-        <Route path="profile" element={<Profile />} />
+      <Route element={<EmployeeLayout />}>
+        <Route path="/employee/dashboard" element={<Dashboard />} />
+        <Route path="/employee/requests" element={<MyRequests />} />
+        <Route path="/employee/requests/:id" element={<RequestDetails />} />
+        <Route path="/employee/at-risk" element={<AtRisk />} />
+        <Route path="/employee/notifications" element={<Notifications />} />
+        <Route path="/employee/profile" element={<Profile />} />
       </Route>
     </Routes>
   );
