@@ -284,7 +284,7 @@ function LandingPage() {
               </div>
               <span className="font-bold text-xl tracking-tight text-gray-900 dark:text-white">DelayGuard</span>
             </div>
-            <p className="text-xs text-gray-500">&copy; 2024 DelayGuard AI. All rights reserved.</p>
+            <p className="text-xs text-gray-500">&copy; 2026 DelayGuard AI. All rights reserved.</p>
           </div>
           
           <div className="flex gap-16 md:gap-24">
