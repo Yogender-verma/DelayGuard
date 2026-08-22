@@ -102,7 +102,7 @@ function LandingPage() {
               Start for Free
             </Link>
             <Link to="/contact" className="w-full sm:w-auto bg-gradient-to-r from-[#d946ef] to-[#a855f7] hover:from-[#c026d3] hover:to-[#9333ea] text-white font-semibold px-8 py-3.5 rounded-full flex items-center justify-center transition-all shadow-lg shadow-fuchsia-500/25">
-              Contact Us
+              Book a Demo
             </Link>
           </div>
         </div>
