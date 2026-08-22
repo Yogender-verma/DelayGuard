@@ -4,7 +4,6 @@ import ContactPage from './ContactPage';
 import { useTheme } from './ThemeContext';
 import { 
   ShieldAlert, 
-  ArrowRight, 
   Activity, 
   MapPin, 
   Gauge, 
@@ -13,9 +12,7 @@ import {
   Target,
   CheckCircle2,
   ChevronDown,
-  AlertTriangle,
   Users,
-  Clock,
   Monitor,
   Headset,
   Settings,
