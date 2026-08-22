@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Routes, Route, Link } from 'react-router-dom';
 import ContactPage from './ContactPage';
+import LoginPage from './LoginPage';
+import SignupPage from './SignupPage';
 import { useTheme } from './ThemeContext';
 import { 
   ShieldAlert, 
@@ -69,10 +71,10 @@ function LandingPage() {
 
           <div className="flex items-center gap-4 text-sm font-medium">
             <ThemeToggle />
-            <a href="#login" className="text-gray-600 dark:text-gray-200 hover:text-gray-900 dark:hover:text-white transition-colors hidden md:block">Login</a>
-            <a href="#start" className="bg-gradient-to-r from-[#d946ef] to-[#8b5cf6] hover:from-[#c026d3] hover:to-[#7c3aed] text-white px-5 py-2.5 rounded-full transition-all shadow-lg shadow-fuchsia-500/25">
+            <Link to="/login" className="text-gray-600 dark:text-gray-200 hover:text-gray-900 dark:hover:text-white transition-colors hidden md:block">Login</Link>
+            <Link to="/signup" className="bg-gradient-to-r from-[#d946ef] to-[#8b5cf6] hover:from-[#c026d3] hover:to-[#7c3aed] text-white px-5 py-2.5 rounded-full transition-all shadow-lg shadow-fuchsia-500/25">
               Start for Free
-            </a>
+            </Link>
           </div>
         </div>
       </header>
@@ -601,6 +603,8 @@ export default function App() {
     <Routes>
       <Route path="/" element={<LandingPage />} />
       <Route path="/contact" element={<ContactPage />} />
+      <Route path="/login" element={<LoginPage />} />
+      <Route path="/signup" element={<SignupPage />} />
     </Routes>
   );
 }

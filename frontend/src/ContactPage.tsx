@@ -19,7 +19,7 @@ export default function ContactPage() {
           <div className="absolute top-0 right-0 w-64 h-64 bg-fuchsia-500/10 blur-[80px] rounded-full pointer-events-none" />
           
           <h1 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-2">
-            Schedule a <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#a855f7] to-[#ec4899]">Demo</span>
+            Contact <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#a855f7] to-[#ec4899]">Us</span>
           </h1>
           <p className="text-gray-600 dark:text-gray-400 mb-8">
             Let us know what challenges you're facing, and we'll show you how DelayGuard can help.
@@ -49,7 +49,7 @@ export default function ContactPage() {
             </div>
             
             <div className="space-y-2">
-              <label htmlFor="problem" className="text-sm font-medium text-gray-700 dark:text-gray-300 block">What SLA challenges are you facing?</label>
+              <label htmlFor="problem" className="text-sm font-medium text-gray-700 dark:text-gray-300 block">What services do you need?</label>
               <textarea 
                 id="problem" 
                 rows={4}
