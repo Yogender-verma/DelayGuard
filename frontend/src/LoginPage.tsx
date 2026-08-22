@@ -38,9 +38,19 @@ export default function LoginPage() {
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
             Welcome <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#a855f7] to-[#ec4899]">Back</span>
           </h1>
-          <p className="text-gray-600 dark:text-gray-400 mb-8 text-sm">
+          <p className="text-gray-600 dark:text-gray-400 mb-6 text-sm">
             Log in to access your DelayGuard dashboard and SLA predictions.
           </p>
+
+          <div className="mb-6 p-4 rounded-xl bg-fuchsia-50 dark:bg-fuchsia-500/10 border border-fuchsia-200 dark:border-fuchsia-500/20 relative z-10">
+            <h3 className="text-xs font-bold text-fuchsia-800 dark:text-fuchsia-300 uppercase tracking-wider mb-2">Demo Accounts</h3>
+            <div className="grid grid-cols-2 gap-2 text-sm text-fuchsia-700 dark:text-fuchsia-200/80">
+              <p><strong>Admin:</strong> admin@123</p>
+              <p><strong>Employee:</strong> employee@123</p>
+              <p><strong>Citizen:</strong> citizen@123</p>
+              <p><strong>Password:</strong> 12345</p>
+            </div>
+          </div>
           
           <form className="space-y-5 relative z-10" onSubmit={handleLogin}>
             {error && (
