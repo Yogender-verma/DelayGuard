@@ -3,6 +3,13 @@ import { Routes, Route, Link } from 'react-router-dom';
 import ContactPage from './ContactPage';
 import LoginPage from './LoginPage';
 import SignupPage from './SignupPage';
+import EmployeeLayout from './components/employee/EmployeeLayout';
+import Dashboard from './pages/employee/Dashboard';
+import MyRequests from './pages/employee/MyRequests';
+import AtRisk from './pages/employee/AtRisk';
+import RequestDetails from './pages/employee/RequestDetails';
+import Notifications from './pages/employee/Notifications';
+import Profile from './pages/employee/Profile';
 import { useTheme } from './ThemeContext';
 import { 
   ShieldAlert, 
@@ -604,6 +611,16 @@ export default function App() {
       <Route path="/contact" element={<ContactPage />} />
       <Route path="/login" element={<LoginPage />} />
       <Route path="/signup" element={<SignupPage />} />
+      
+      {/* Employee Routes */}
+      <Route path="/employee" element={<EmployeeLayout />}>
+        <Route path="dashboard" element={<Dashboard />} />
+        <Route path="requests" element={<MyRequests />} />
+        <Route path="requests/:id" element={<RequestDetails />} />
+        <Route path="at-risk" element={<AtRisk />} />
+        <Route path="notifications" element={<Notifications />} />
+        <Route path="profile" element={<Profile />} />
+      </Route>
     </Routes>
   );
 }

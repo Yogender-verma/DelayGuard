@@ -13,8 +13,11 @@ export default function LoginPage() {
     const validEmails = ['admin@123', 'employee@123', 'citizen@123'];
     if (validEmails.includes(email) && password === '12345') {
       // Mock successful login
-      alert(`Login successful as ${email.split('@')[0]}! Redirecting...`);
-      navigate('/');
+      if (email === 'employee@123' || email === 'admin@123') {
+        navigate('/employee/dashboard');
+      } else {
+        navigate('/');
+      }
     } else {
       setError('Invalid email or password. Hint: admin@123, employee@123, or citizen@123 / 12345');
     }
