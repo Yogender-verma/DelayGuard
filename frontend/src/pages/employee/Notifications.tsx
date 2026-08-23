@@ -1,4 +1,3 @@
-import React from 'react';
 import { AlertTriangle, CheckCircle2, TrendingUp, CheckCircle } from 'lucide-react';
 
 export default function Notifications() {
@@ -44,7 +43,7 @@ export default function Notifications() {
         </button>
       </div>
 
-      <div className="bg-white dark:bg-[#121524] border border-gray-200 dark:border-white/10 rounded-2xl shadow-sm overflow-hidden">
+      <div className="bg-white/80 dark:bg-[#121524]/80 backdrop-blur-xl border border-gray-200 dark:border-white/10 rounded-2xl shadow-sm overflow-hidden">
         <div className="divide-y divide-gray-200 dark:divide-white/5">
           {notifications.map(notif => {
             const Icon = notif.icon;

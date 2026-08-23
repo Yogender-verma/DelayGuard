@@ -64,7 +64,7 @@ export interface RequestData {
 export const MOCK_REQUESTS: RequestData[] = [
   {
     id: '1042',
-    type: 'Certificate Request',
+    type: 'Income Certificate Request',
     department: 'Revenue',
     team: 'Approval Team A',
     priority: 'Critical',

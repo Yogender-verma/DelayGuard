@@ -1,15 +1,33 @@
-import React from 'react';
 import { useEmployeeData } from '../../contexts/EmployeeContext';
-import { Link } from 'react-router-dom';
-import { Zap, Clock, AlertTriangle, ArrowRight } from 'lucide-react';
+import { Link, useSearchParams } from 'react-router-dom';
+import { Zap, Clock, AlertTriangle, ArrowRight, X } from 'lucide-react';
 
 export default function AtRisk() {
   const { requests } = useEmployeeData();
+  const [searchParams] = useSearchParams();
+  const riskParam = searchParams.get('risk');
+  const stageParam = searchParams.get('stage');
   
-  // Filter only High and Critical risk
+  // Filter only High and Critical risk by default, or specific params if supplied
   const atRiskRequests = requests
-    .filter(r => r.status !== 'Completed' && (r.riskLevel === 'High' || r.riskLevel === 'Critical'))
+    .filter(r => {
+      const isNotCompleted = r.status !== 'Completed';
+      
+      if (riskParam) {
+        return isNotCompleted && r.riskLevel.toLowerCase() === riskParam.toLowerCase();
+      }
+      
+      return isNotCompleted && (r.riskLevel === 'High' || r.riskLevel === 'Critical');
+    })
+    .filter(r => {
+      if (stageParam) {
+        return r.currentStage.toLowerCase() === stageParam.toLowerCase();
+      }
+      return true;
+    })
     .sort((a, b) => b.riskScore - a.riskScore);
+
+  const hasActiveFilters = !!riskParam || !!stageParam;
 
   return (
     <div className="space-y-6 animate-hero-entry">
@@ -39,11 +57,31 @@ export default function AtRisk() {
         </div>
       </div>
 
+      {/* Active Filters */}
+      {hasActiveFilters && (
+        <div className="flex flex-wrap items-center gap-3 bg-white/50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl px-4 py-2.5 text-sm text-gray-700 dark:text-gray-300">
+          <span className="font-semibold">Active Filter:</span>
+          {riskParam && (
+            <span className="px-2 py-0.5 bg-fuchsia-50 dark:bg-fuchsia-500/10 text-fuchsia-700 dark:text-fuchsia-400 rounded-lg text-xs font-semibold capitalize flex items-center gap-1.5">
+              Risk: {riskParam}
+            </span>
+          )}
+          {stageParam && (
+            <span className="px-2 py-0.5 bg-fuchsia-50 dark:bg-fuchsia-500/10 text-fuchsia-700 dark:text-fuchsia-400 rounded-lg text-xs font-semibold capitalize flex items-center gap-1.5">
+              Stage: {stageParam}
+            </span>
+          )}
+          <Link to="/employee/at-risk" className="ml-auto text-xs text-gray-500 hover:text-red-500 flex items-center gap-1">
+            <X size={14} /> Clear all filters
+          </Link>
+        </div>
+      )}
+
       {/* Request Cards */}
       <div className="grid grid-cols-1 gap-6">
         {atRiskRequests.length > 0 ? (
           atRiskRequests.map(req => (
-            <div key={req.id} className="bg-white dark:bg-[#121524] border border-gray-200 dark:border-white/10 rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow">
+            <div key={req.id} className="bg-white/80 dark:bg-[#121524]/80 backdrop-blur-xl border border-gray-200 dark:border-white/10 rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow">
               
               {/* Header */}
               <div className="p-5 md:p-6 border-b border-gray-100 dark:border-white/5 flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -114,7 +152,7 @@ export default function AtRisk() {
                 <div className="flex gap-3 w-full md:w-auto">
                   <Link 
                     to={`/employee/requests/${req.id}`}
-                    className="flex-1 md:flex-none text-center bg-white dark:bg-[#121524] border border-gray-200 dark:border-white/10 hover:bg-gray-50 dark:hover:bg-white/5 text-gray-700 dark:text-gray-200 font-semibold py-2 px-6 rounded-xl transition-colors"
+                    className="flex-1 md:flex-none text-center bg-white/80 dark:bg-[#121524]/80 backdrop-blur-xl border border-gray-200 dark:border-white/10 hover:bg-gray-50 dark:hover:bg-white/5 text-gray-700 dark:text-gray-200 font-semibold py-2 px-6 rounded-xl transition-colors"
                   >
                     View Risk Analysis
                   </Link>
@@ -131,7 +169,7 @@ export default function AtRisk() {
             </div>
           ))
         ) : (
-          <div className="bg-white dark:bg-[#121524] border border-gray-200 dark:border-white/10 rounded-2xl p-12 text-center">
+          <div className="bg-white/80 dark:bg-[#121524]/80 backdrop-blur-xl border border-gray-200 dark:border-white/10 rounded-2xl p-12 text-center">
              <div className="w-16 h-16 bg-green-50 dark:bg-green-500/10 rounded-full flex items-center justify-center mx-auto mb-4 text-green-500">
                <span className="text-2xl">🎉</span>
              </div>

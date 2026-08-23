@@ -1,7 +1,9 @@
-import React from 'react';
-import { User, Shield, Briefcase, Mail, Phone, Calendar, RefreshCcw, ArrowUpCircle, AlertTriangle } from 'lucide-react';
+import { Shield, Briefcase, Mail, Phone, Calendar, RefreshCcw, ArrowUpCircle, AlertTriangle } from 'lucide-react';
+import { useEmployeeData } from '../../contexts/EmployeeContext';
 
 export default function Profile() {
+  const { interventionHistory } = useEmployeeData();
+
   const employeeData = {
     name: 'Rahul Sharma',
     id: 'EMP-1042',
@@ -13,29 +15,27 @@ export default function Profile() {
     joined: 'Jan 2024'
   };
 
-  const actionHistory = [
-    {
-      date: 'Today, 10:45 AM',
-      action: 'Reassigned',
-      target: 'Request #1042',
-      icon: RefreshCcw,
-      color: 'fuchsia'
-    },
-    {
-      date: 'Yesterday, 03:20 PM',
-      action: 'Escalated',
-      target: 'Request #1087',
-      icon: ArrowUpCircle,
-      color: 'orange'
-    },
-    {
-      date: 'Aug 20, 11:15 AM',
-      action: 'Prioritized',
-      target: 'Request #1092',
-      icon: AlertTriangle,
-      color: 'red'
+  const actionHistory = interventionHistory.map(item => {
+    let icon = AlertTriangle;
+    let color = 'blue';
+    if (item.action === 'Reassigned' || item.action === 'Reassign') {
+      icon = RefreshCcw;
+      color = 'fuchsia';
+    } else if (item.action === 'Escalated' || item.action === 'Escalate') {
+      icon = ArrowUpCircle;
+      color = 'orange';
+    } else if (item.action === 'Prioritized' || item.action === 'Prioritize') {
+      icon = AlertTriangle;
+      color = 'red';
     }
-  ];
+    return {
+      date: item.date,
+      action: item.action,
+      target: item.targetId.startsWith('GOI-') ? `Request #${item.targetId.replace('GOI-', '')}` : `Request #${item.targetId}`,
+      icon,
+      color
+    };
+  });
 
   return (
     <div className="space-y-6 animate-hero-entry max-w-4xl">
@@ -48,7 +48,7 @@ export default function Profile() {
         
         {/* Profile Card */}
         <div className="md:col-span-1 space-y-6">
-          <div className="bg-white dark:bg-[#121524] border border-gray-200 dark:border-white/10 rounded-2xl p-6 shadow-sm text-center">
+          <div className="bg-white/80 dark:bg-[#121524]/80 backdrop-blur-xl border border-gray-200 dark:border-white/10 rounded-2xl p-6 shadow-sm text-center">
             <div className="w-24 h-24 mx-auto rounded-full bg-gradient-to-br from-indigo-500 to-fuchsia-500 flex items-center justify-center text-white font-bold text-3xl shadow-lg mb-4">
               RS
             </div>
@@ -59,7 +59,7 @@ export default function Profile() {
             </span>
           </div>
 
-          <div className="bg-white dark:bg-[#121524] border border-gray-200 dark:border-white/10 rounded-2xl p-6 shadow-sm">
+          <div className="bg-white/80 dark:bg-[#121524]/80 backdrop-blur-xl border border-gray-200 dark:border-white/10 rounded-2xl p-6 shadow-sm">
             <h3 className="font-bold text-gray-900 dark:text-white uppercase tracking-wider text-sm mb-4">Contact Info</h3>
             <div className="space-y-4 text-sm">
               <div className="flex items-center gap-3 text-gray-600 dark:text-gray-400">
@@ -78,7 +78,7 @@ export default function Profile() {
         {/* Details & History */}
         <div className="md:col-span-2 space-y-6">
           
-          <div className="bg-white dark:bg-[#121524] border border-gray-200 dark:border-white/10 rounded-2xl p-6 shadow-sm">
+          <div className="bg-white/80 dark:bg-[#121524]/80 backdrop-blur-xl border border-gray-200 dark:border-white/10 rounded-2xl p-6 shadow-sm">
             <h3 className="font-bold text-gray-900 dark:text-white uppercase tracking-wider text-sm mb-6 flex items-center gap-2">
               <Briefcase size={16} className="text-blue-500" />
               Department Information
@@ -108,7 +108,7 @@ export default function Profile() {
             </div>
           </div>
 
-          <div className="bg-white dark:bg-[#121524] border border-gray-200 dark:border-white/10 rounded-2xl p-6 shadow-sm">
+          <div className="bg-white/80 dark:bg-[#121524]/80 backdrop-blur-xl border border-gray-200 dark:border-white/10 rounded-2xl p-6 shadow-sm">
             <h3 className="font-bold text-gray-900 dark:text-white uppercase tracking-wider text-sm mb-6">Recent Actions</h3>
             
             <div className="space-y-6 relative before:absolute before:inset-0 before:ml-4 before:-translate-x-px md:before:mx-0 md:before:translate-x-4 before:h-full before:w-0.5 before:bg-gray-200 dark:before:bg-white/10">

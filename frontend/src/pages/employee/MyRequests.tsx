@@ -1,16 +1,31 @@
-import React, { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useEmployeeData } from '../../contexts/EmployeeContext';
-import { Link } from 'react-router-dom';
-import { Search, Filter, Eye } from 'lucide-react';
+import { Link, useSearchParams, useNavigate } from 'react-router-dom';
+import { Search, Filter, Eye, X, Loader2, Upload } from 'lucide-react';
 
 export default function MyRequests() {
-  const { requests } = useEmployeeData();
+  const { requests, importRequests } = useEmployeeData();
+  const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
+  const riskParam = searchParams.get('risk');
+  const deadlineParam = searchParams.get('deadline');
   
   const [searchTerm, setSearchTerm] = useState('');
-  const [riskFilter, setRiskFilter] = useState('All');
+  const [riskFilter, setRiskFilter] = useState(() => {
+    if (riskParam) {
+      return riskParam.charAt(0).toUpperCase() + riskParam.slice(1).toLowerCase();
+    }
+    return 'All';
+  });
   const [statusFilter, setStatusFilter] = useState('All');
   const [priorityFilter, setPriorityFilter] = useState('All');
   const [deptFilter, setDeptFilter] = useState('All');
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [isProcessing, setIsProcessing] = useState(false);
+
+  const departments = Array.from(new Set(requests.map(r => r.department))).sort();
+
+  const hasActiveParams = !!riskParam || !!deadlineParam;
 
   const filteredRequests = requests.filter(req => {
     const matchesSearch = 
@@ -22,18 +37,166 @@ export default function MyRequests() {
     const matchesStatus = statusFilter === 'All' || req.status === statusFilter;
     const matchesPriority = priorityFilter === 'All' || req.priority === priorityFilter;
     const matchesDept = deptFilter === 'All' || req.department === deptFilter;
+    const matchesDeadline = deadlineParam === 'today'
+      ? (req.timeRemaining.toLowerCase().includes('hour') || req.timeRemaining.toLowerCase().includes('1 day'))
+      : true;
 
-    return matchesSearch && matchesRisk && matchesStatus && matchesPriority && matchesDept;
+    return matchesSearch && matchesRisk && matchesStatus && matchesPriority && matchesDeadline && matchesDept;
   });
+
+  const parseCSV = (text: string): any[] => {
+    const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
+    if (lines.length < 2) return [];
+    
+    const headers = lines[0].split(',').map(h => h.trim().replace(/^["']|["']$/g, ''));
+    const results: any[] = [];
+    
+    for (let i = 1; i < lines.length; i++) {
+      const values = lines[i].split(',').map(v => v.trim().replace(/^["']|["']$/g, ''));
+      const obj: any = {};
+      headers.forEach((header, index) => {
+        obj[header] = values[index] || '';
+      });
+      results.push(obj);
+    }
+    return results;
+  };
+
+  const generateMockExtractedData = () => {
+    return [
+      {
+        id: `EXT-${Math.floor(21000 + Math.random() * 90000)}`,
+        department: 'Ministry of Labour',
+        type: 'PF Withdrawal Delay (Extracted)',
+        date_of_receipt: new Date(Date.now() - 14 * 86400000).toISOString().split('T')[0],
+        current_stage: 'Verification',
+        backlog: 42,
+        sla_limit_days: 15,
+        elapsed_days: 14
+      },
+      {
+        id: `EXT-${Math.floor(21000 + Math.random() * 90000)}`,
+        department: 'Department of Revenue',
+        type: 'Income Tax Refund (Extracted)',
+        date_of_receipt: new Date(Date.now() - 28 * 86400000).toISOString().split('T')[0],
+        current_stage: 'Approval',
+        backlog: 150,
+        sla_limit_days: 30,
+        elapsed_days: 28
+      }
+    ];
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    
+    setIsProcessing(true);
+
+    const finishWithMock = () => {
+      setTimeout(() => {
+        const extracted = generateMockExtractedData();
+        importRequests(extracted);
+        setIsProcessing(false);
+        if (fileInputRef.current) fileInputRef.current.value = '';
+      }, 2000);
+    };
+
+    if (!file.name.endsWith('.json') && !file.name.endsWith('.csv')) {
+      finishWithMock();
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      const text = ev.target?.result as string;
+      if (!text) {
+        finishWithMock();
+        return;
+      }
+      try {
+        let data: any[] = [];
+        if (file.name.endsWith('.json')) {
+          data = JSON.parse(text);
+          if (!Array.isArray(data)) data = [data];
+        } else if (file.name.endsWith('.csv')) {
+          data = parseCSV(text);
+        }
+        
+        if (data.length > 0 && typeof data[0] === 'object') {
+          importRequests(data);
+          setIsProcessing(false);
+          if (fileInputRef.current) fileInputRef.current.value = '';
+        } else {
+          finishWithMock();
+        }
+      } catch (err) {
+        console.warn("Parse failed, falling back to AI extraction mock.", err);
+        finishWithMock();
+      }
+    };
+    reader.readAsText(file);
+  };
 
   return (
     <div className="space-y-6 animate-hero-entry">
-      <div>
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">My Requests</h1>
-        <p className="text-gray-500 dark:text-gray-400">All service requests currently assigned to you.</p>
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">My Requests</h1>
+          <p className="text-gray-500 dark:text-gray-400">All service requests currently assigned to you.</p>
+        </div>
+        <div className="flex items-center gap-2 self-start md:self-auto">
+          <input 
+            type="file" 
+            ref={fileInputRef} 
+            onChange={handleFileChange} 
+            accept=".csv,.json,.pdf,.docx,.doc,.xlsx,.xls" 
+            className="hidden" 
+          />
+          <button 
+            onClick={() => fileInputRef.current?.click()}
+            disabled={isProcessing}
+            className={`flex items-center justify-center gap-2 text-white font-semibold py-2.5 px-5 rounded-xl transition-all shadow-md shrink-0 ${
+              isProcessing 
+                ? 'bg-gray-400 dark:bg-white/10 cursor-not-allowed shadow-none'
+                : 'bg-gradient-to-r from-[#d946ef] to-[#8b5cf6] hover:from-[#c026d3] hover:to-[#7c3aed] shadow-fuchsia-500/25'
+            }`}
+          >
+            {isProcessing ? (
+              <>
+                <Loader2 size={18} className="animate-spin" />
+                Extracting...
+              </>
+            ) : (
+              <>
+                <Upload size={18} />
+                Upload Data
+              </>
+            )}
+          </button>
+        </div>
       </div>
 
-      <div className="bg-white dark:bg-[#121524] border border-gray-200 dark:border-white/10 rounded-2xl shadow-sm overflow-hidden">
+      {hasActiveParams && (
+        <div className="flex flex-wrap items-center gap-3 bg-white/50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl px-4 py-2.5 text-sm text-gray-700 dark:text-gray-300">
+          <span className="font-semibold">Active URL Filters:</span>
+          {riskParam && (
+            <span className="px-2 py-0.5 bg-fuchsia-50 dark:bg-fuchsia-500/10 text-fuchsia-700 dark:text-fuchsia-400 rounded-lg text-xs font-semibold capitalize flex items-center gap-1.5">
+              Risk: {riskParam}
+            </span>
+          )}
+          {deadlineParam === 'today' && (
+            <span className="px-2 py-0.5 bg-fuchsia-50 dark:bg-fuchsia-500/10 text-fuchsia-700 dark:text-fuchsia-400 rounded-lg text-xs font-semibold flex items-center gap-1.5">
+              Due Today
+            </span>
+          )}
+          <Link to="/employee/requests" className="ml-auto text-xs text-gray-500 hover:text-red-500 flex items-center gap-1">
+            <X size={14} /> Clear all filters
+          </Link>
+        </div>
+      )}
+
+      <div className="bg-white/80 dark:bg-[#121524]/80 backdrop-blur-xl border border-gray-200 dark:border-white/10 rounded-2xl shadow-sm overflow-hidden">
         
         {/* Filters and Search */}
         <div className="p-4 md:p-6 border-b border-gray-200 dark:border-white/10 space-y-4">
@@ -79,6 +242,15 @@ export default function MyRequests() {
                 <option value="Low">Low</option>
               </select>
             </div>
+            <div className="flex items-center gap-2">
+              <span className="font-medium text-gray-700 dark:text-gray-300">Department:</span>
+              <select value={deptFilter} onChange={e => setDeptFilter(e.target.value)} className="bg-transparent border border-gray-200 dark:border-white/10 rounded-lg px-2 py-1 dark:text-gray-300 max-w-[200px] truncate">
+                <option value="All">All Departments</option>
+                {departments.map(d => (
+                  <option key={d} value={d}>{d}</option>
+                ))}
+              </select>
+            </div>
           </div>
         </div>
 
@@ -100,7 +272,11 @@ export default function MyRequests() {
             <tbody className="divide-y divide-gray-200 dark:divide-white/5">
               {filteredRequests.length > 0 ? (
                 filteredRequests.map(req => (
-                  <tr key={req.id} className="hover:bg-gray-50/50 dark:hover:bg-white-[0.02] transition-colors">
+                  <tr 
+                    key={req.id} 
+                    onClick={() => navigate(`/employee/requests/${req.id}`)}
+                    className="hover:bg-fuchsia-50/50 dark:hover:bg-fuchsia-500/5 active:bg-fuchsia-100/50 dark:active:bg-fuchsia-500/10 transition-all duration-150 cursor-pointer select-none border-b border-gray-200 dark:border-white/5"
+                  >
                     <td className="px-6 py-4 font-semibold text-gray-900 dark:text-white">#{req.id}</td>
                     <td className="px-6 py-4 font-medium">{req.type}</td>
                     <td className="px-6 py-4">{req.department}</td>

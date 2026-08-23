@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Routes, Route, Link } from 'react-router-dom';
+import { Routes, Route, Link, Navigate } from 'react-router-dom';
 import ContactPage from './ContactPage';
 import LoginPage from './LoginPage';
 import SignupPage from './SignupPage';
@@ -621,6 +621,9 @@ export default function App() {
         <Route path="/employee/notifications" element={<Notifications />} />
         <Route path="/employee/profile" element={<Profile />} />
       </Route>
+
+      {/* Admin Redirect */}
+      <Route path="/admin/*" element={<Navigate to="/employee/dashboard" replace />} />
     </Routes>
   );
 }

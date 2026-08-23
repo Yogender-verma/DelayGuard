@@ -14,7 +14,7 @@ export default function EmployeeSidebar() {
   ];
 
   return (
-    <div className="w-64 h-screen bg-white dark:bg-[#121524] border-r border-gray-200 dark:border-white/10 flex flex-col fixed left-0 top-0 z-40 hidden md:flex transition-colors">
+    <div className="w-64 h-screen bg-white/80 dark:bg-[#121524]/80 backdrop-blur-xl border-r border-gray-200 dark:border-white/10 flex flex-col fixed left-0 top-0 z-40 hidden md:flex transition-colors">
       
       {/* Brand */}
       <div className="h-16 flex items-center px-6 border-b border-gray-200 dark:border-white/10 shrink-0">

@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { useParams, Link, useNavigate, useLocation } from 'react-router-dom';
+import { useState } from 'react';
+import { useParams, Link, useLocation } from 'react-router-dom';
 import { useEmployeeData } from '../../contexts/EmployeeContext';
 import { 
   ArrowLeft, AlertTriangle, Clock, Target, 
@@ -10,7 +10,6 @@ import {
 export default function RequestDetails() {
   const { id } = useParams();
   const location = useLocation();
-  const navigate = useNavigate();
   const { requests, executeIntervention } = useEmployeeData();
   
   const req = requests.find(r => r.id === id);
@@ -29,6 +28,78 @@ export default function RequestDetails() {
     executeIntervention(req.id, req.recommendedAction);
     setModalOpen(false);
     // Could show a toast here in a real app
+  };
+
+  // Generate human-friendly explanations dynamically based on the request's details
+  const getRiskExplanation = () => {
+    const remaining = req.timeRemaining.toLowerCase();
+    if (req.riskLevel === 'Low' || req.riskLevel === 'Medium') {
+      return `This request has a comfortable ${req.timeRemaining} remaining and is currently processing on schedule without any immediate risk.`;
+    }
+    if (remaining.includes('hour')) {
+      return `The deadline is in only ${req.timeRemaining}, but the request is still stuck waiting in the ${req.currentStage.toLowerCase()} stage.`;
+    }
+    if (remaining.includes('1 day')) {
+      return `The deadline is tomorrow (only 1 day left), but the request is still stuck waiting in the ${req.currentStage.toLowerCase()} stage.`;
+    }
+    return `The deadline is approaching in ${req.timeRemaining}, but the request is bottlenecked in the ${req.currentStage.toLowerCase()} stage.`;
+  };
+
+  const getUnsolvedReason = () => {
+    if (req.riskLevel === 'Low' || req.riskLevel === 'Medium') {
+      return "There are no major delays detected; the task is moving through normal queue filters.";
+    }
+    return `The ${req.currentStage.toLowerCase()} stage is delayed (taking ${req.currentStageDuration} instead of the usual ${req.historicalAverage}) because the assigned team (${req.team}) is overloaded with ${req.teamBacklog} pending cases in their queue.`;
+  };
+
+  const getSolutionDescription = () => {
+    const action = req.recommendedAction.toLowerCase();
+    if (action === 'monitor') {
+      return "No intervention is needed right now. Continue monitoring the request to make sure it completes on schedule.";
+    }
+    if (action === 'reassign') {
+      return `Reassign this request to an alternate team with a lower backlog (like Team B) so they can process the ${req.currentStage.toLowerCase()} immediately.`;
+    }
+    if (action === 'escalate') {
+      return `Escalate this request to the supervisor to flag it for immediate expedited processing and bypass the backlog.`;
+    }
+    if (action === 'prioritize') {
+      return `Mark this request with an urgent high-priority flag to move it to the very front of the team's processing queue.`;
+    }
+    return `Execute the recommended '${req.recommendedAction}' action to speed up processing and avoid an SLA breach.`;
+  };
+
+  const getResolutionTimeline = () => {
+    if (req.id === '1042') {
+      return {
+        withAction: "~2 hours (safely before the deadline)",
+        withoutAction: "~2.4 days (will miss the deadline by over 2 days)"
+      };
+    }
+    if (req.id === '1087') {
+      return {
+        withAction: "~3 hours (safely before the deadline)",
+        withoutAction: "~1.8 days (will miss the deadline by over 1.5 days)"
+      };
+    }
+    if (req.id === '1102') {
+      return {
+        withAction: "~6 hours (safely before the deadline)",
+        withoutAction: "~2.2 days (will miss the deadline by over 1 day)"
+      };
+    }
+    if (req.id === '1130') {
+      return {
+        withAction: "~5 hours (safely before the deadline)",
+        withoutAction: "~4.5 days (will miss the deadline by over 3 days)"
+      };
+    }
+    
+    // Fallbacks for low/medium risk
+    return {
+      withAction: `~${req.timeRemaining} (on track to resolve within SLA)`,
+      withoutAction: "Progressing normally (no delay expected)"
+    };
   };
 
   const riskColor = 
@@ -66,8 +137,75 @@ export default function RequestDetails() {
         </div>
       </div>
 
+      {/* Data Layer Mapping & Source Distinction */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-white/40 dark:bg-white/[0.02] border border-gray-200 dark:border-white/10 rounded-2xl p-5 backdrop-blur-md">
+        
+        {/* original CPGRAMS fields */}
+        <div className="space-y-3">
+          <h4 className="text-xs font-bold text-indigo-500 uppercase tracking-widest flex items-center gap-1.5">
+            <span className="w-1.5 h-1.5 rounded-full bg-indigo-500"></span>
+            Official CPGRAMS Grievance Fields
+          </h4>
+          <div className="grid grid-cols-2 gap-3 text-sm">
+            <div>
+              <span className="text-gray-500 block text-xs text-gray-400">Registration No</span>
+              <span className="font-semibold text-gray-900 dark:text-white">{req.id}</span>
+            </div>
+            <div>
+              <span className="text-gray-500 block text-xs text-gray-400">Filing Date</span>
+              <span className="font-semibold text-gray-900 dark:text-white">{req.createdAt}</span>
+            </div>
+            <div>
+              <span className="text-gray-500 block text-xs text-gray-400">Department (org_code)</span>
+              <span className="font-semibold text-gray-900 dark:text-white">{req.department}</span>
+            </div>
+            <div>
+              <span className="text-gray-500 block text-xs text-gray-400">Category Code</span>
+              <span className="font-semibold text-gray-900 dark:text-white">{req.originalGrievance?.category_code || 'CAT-001'}</span>
+            </div>
+          </div>
+          <div className="pt-2 border-t border-gray-200/50 dark:border-white/5">
+            <span className="text-gray-500 block text-xs text-gray-400">Grievance Description Summary</span>
+            <p className="text-xs text-gray-700 dark:text-gray-300 italic truncate">{req.originalGrievance?.subject_content_text || req.type}</p>
+          </div>
+        </div>
+
+        {/* simulated/derived SLA features */}
+        <div className="space-y-3 border-t md:border-t-0 md:border-l border-gray-200 dark:border-white/10 pt-3 md:pt-0 md:pl-6">
+          <h4 className="text-xs font-bold text-fuchsia-500 uppercase tracking-widest flex items-center gap-1.5">
+            <span className="w-1.5 h-1.5 rounded-full bg-fuchsia-500 animate-pulse"></span>
+            DelayGuard Derived / SLA features
+          </h4>
+          <div className="grid grid-cols-2 gap-3 text-sm">
+            <div>
+              <span className="text-gray-500 block text-xs text-gray-400">Prototype SLA Limit</span>
+              <span className="font-semibold text-fuchsia-600 dark:text-fuchsia-400">
+                {req.slaData.totalSlaDays} Days (Configured)
+              </span>
+            </div>
+            <div>
+              <span className="text-gray-500 block text-xs text-gray-400">SLA Target Date</span>
+              <span className="font-semibold text-gray-900 dark:text-white">{req.deadline}</span>
+            </div>
+            <div>
+              <span className="text-gray-500 block text-xs text-gray-400">Current Backlog</span>
+              <span className="font-semibold text-gray-900 dark:text-white">{req.teamBacklog} Cases</span>
+            </div>
+            <div>
+              <span className="text-gray-500 block text-xs text-gray-400">Historical delay rate</span>
+              <span className="font-semibold text-gray-900 dark:text-white">{req.historicalDelayRate}%</span>
+            </div>
+          </div>
+          <div className="pt-2 border-t border-gray-200/50 dark:border-white/5 flex justify-between items-center">
+            <span className="text-gray-500 block text-xs text-gray-400">Prediction SLA Score</span>
+            <span className={`font-bold text-sm text-${riskColor}-500`}>{req.riskScore}% {req.riskLevel} Risk</span>
+          </div>
+        </div>
+
+      </div>
+
       {/* SLA Progress Visualization */}
-      <div className="bg-white dark:bg-[#121524] border border-gray-200 dark:border-white/10 rounded-2xl p-6 md:p-8 shadow-sm">
+      <div className="bg-white/80 dark:bg-[#121524]/80 backdrop-blur-xl border border-gray-200 dark:border-white/10 rounded-2xl p-6 md:p-8 shadow-sm">
         <div className="flex items-center justify-between mb-8">
            <h3 className="font-bold text-gray-900 dark:text-white uppercase tracking-wider">SLA Progress</h3>
            <div className={`px-4 py-1.5 rounded-full flex items-center gap-2 font-bold bg-${riskColor}-50 text-${riskColor}-700 border border-${riskColor}-200 dark:bg-${riskColor}-500/10 dark:text-${riskColor}-400 dark:border-${riskColor}-500/20`}>
@@ -96,7 +234,7 @@ export default function RequestDetails() {
              </div>
              
              <div className="flex flex-col items-center absolute" style={{ left: `${req.slaData.consumedPercentage}%`, transform: 'translateX(-50%)' }}>
-               <div className="w-5 h-5 rounded-full bg-white dark:bg-[#121524] border-4 border-fuchsia-500 shadow-[0_0_10px_rgba(217,70,239,0.5)] mb-2 -mt-0.5 relative">
+               <div className="w-5 h-5 rounded-full bg-white/80 dark:bg-[#121524]/80 backdrop-blur-xl border-4 border-fuchsia-500 shadow-[0_0_10px_rgba(217,70,239,0.5)] mb-2 -mt-0.5 relative">
                   <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-gray-900 dark:bg-white text-white dark:text-gray-900 px-2 py-1 rounded text-[10px] whitespace-nowrap font-bold">
                     NOW
                   </div>
@@ -116,9 +254,78 @@ export default function RequestDetails() {
         
         {/* Left Column */}
         <div className="lg:col-span-2 space-y-6">
-          
+
+          {/* SLA Risk Resolution Summary */}
+          <div className="bg-white/80 dark:bg-[#121524]/80 backdrop-blur-xl border border-fuchsia-500/20 rounded-2xl p-6 md:p-8 shadow-sm relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-64 h-64 bg-fuchsia-500/5 blur-[60px] rounded-full pointer-events-none" />
+            
+            <h3 className="font-bold text-gray-900 dark:text-white uppercase tracking-wider mb-6 flex items-center gap-2">
+              <Activity size={18} className="text-fuchsia-500" />
+              SLA Risk Resolution Summary
+            </h3>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              
+              {/* Why is it at Risk? */}
+              <div className="p-4 rounded-xl bg-red-500/5 border border-red-500/10 space-y-2">
+                <h4 className="text-xs font-bold text-red-600 dark:text-red-400 uppercase tracking-wider flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-red-500"></span>
+                  Why is it at risk?
+                </h4>
+                <p className="text-sm text-gray-700 dark:text-gray-300">
+                  {getRiskExplanation()}
+                </p>
+              </div>
+
+              {/* Why it is not solved yet? */}
+              <div className="p-4 rounded-xl bg-orange-500/5 border border-orange-500/10 space-y-2">
+                <h4 className="text-xs font-bold text-orange-600 dark:text-orange-400 uppercase tracking-wider flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-orange-500"></span>
+                  Why it is not solved yet?
+                </h4>
+                <p className="text-sm text-gray-700 dark:text-gray-300">
+                  {getUnsolvedReason()}
+                </p>
+              </div>
+
+              {/* How to solve it? */}
+              <div className="p-4 rounded-xl bg-fuchsia-500/5 border border-fuchsia-500/10 space-y-2">
+                <h4 className="text-xs font-bold text-fuchsia-600 dark:text-fuchsia-400 uppercase tracking-wider flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-fuchsia-500 animate-pulse"></span>
+                  How to solve it?
+                </h4>
+                <p className="text-sm text-gray-700 dark:text-gray-300">
+                  {getSolutionDescription()}
+                </p>
+              </div>
+
+              {/* In how many days it will get solved? */}
+              <div className="p-4 rounded-xl bg-blue-500/5 border border-blue-500/10 space-y-2">
+                <h4 className="text-xs font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wider flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-blue-500"></span>
+                  Estimated Resolution Timeline
+                </h4>
+                <div className="space-y-1">
+                  <div className="text-sm flex justify-between">
+                    <span className="text-gray-500">With intervention:</span>
+                    <span className="font-bold text-green-600 dark:text-green-400">
+                      {getResolutionTimeline().withAction}
+                    </span>
+                  </div>
+                  <div className="text-sm flex justify-between border-t border-gray-100 dark:border-white/5 pt-1">
+                    <span className="text-gray-500">Without intervention:</span>
+                    <span className="font-semibold text-red-500">
+                      {getResolutionTimeline().withoutAction}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
           {/* Why is this at risk? */}
-          <div className="bg-white dark:bg-[#121524] border border-gray-200 dark:border-white/10 rounded-2xl p-6 md:p-8 shadow-sm">
+          <div className="bg-white/80 dark:bg-[#121524]/80 backdrop-blur-xl border border-gray-200 dark:border-white/10 rounded-2xl p-6 md:p-8 shadow-sm">
             <h3 className="font-bold text-gray-900 dark:text-white uppercase tracking-wider mb-6 flex items-center gap-2">
               <HelpCircle size={18} className="text-fuchsia-500" />
               Why is this request at risk?
@@ -134,7 +341,7 @@ export default function RequestDetails() {
           </div>
 
           {/* Process Timeline */}
-          <div className="bg-white dark:bg-[#121524] border border-gray-200 dark:border-white/10 rounded-2xl p-6 md:p-8 shadow-sm">
+          <div className="bg-white/80 dark:bg-[#121524]/80 backdrop-blur-xl border border-gray-200 dark:border-white/10 rounded-2xl p-6 md:p-8 shadow-sm">
             <h3 className="font-bold text-gray-900 dark:text-white uppercase tracking-wider mb-6">Process Timeline</h3>
             <div className="space-y-6 relative before:absolute before:inset-0 before:ml-2.5 before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-gradient-to-b before:from-gray-200 before:to-transparent dark:before:from-white/10">
               {req.stages.map((stage, idx) => (
@@ -166,7 +373,7 @@ export default function RequestDetails() {
           </div>
 
           {/* Bottleneck Section */}
-          <div className="bg-white dark:bg-[#121524] border border-gray-200 dark:border-white/10 rounded-2xl p-6 md:p-8 shadow-sm">
+          <div className="bg-white/80 dark:bg-[#121524]/80 backdrop-blur-xl border border-gray-200 dark:border-white/10 rounded-2xl p-6 md:p-8 shadow-sm">
             <h3 className="font-bold text-gray-900 dark:text-white uppercase tracking-wider mb-6 flex items-center gap-2">
               <Target size={18} className="text-red-500" />
               Where is the Bottleneck?
@@ -239,7 +446,7 @@ export default function RequestDetails() {
 
           {/* Historical Insights */}
           {req.historicalInsights.length > 0 && (
-            <div className="bg-white dark:bg-[#121524] border border-gray-200 dark:border-white/10 rounded-2xl p-6 shadow-sm">
+            <div className="bg-white/80 dark:bg-[#121524]/80 backdrop-blur-xl border border-gray-200 dark:border-white/10 rounded-2xl p-6 shadow-sm">
               <h3 className="font-bold text-gray-900 dark:text-white uppercase tracking-wider mb-4 flex items-center gap-2 text-sm">
                 <TrendingUp size={16} className="text-blue-500" />
                 Prediction Basis
@@ -256,7 +463,7 @@ export default function RequestDetails() {
           )}
 
           {/* Risk Factors */}
-          <div className="bg-white dark:bg-[#121524] border border-gray-200 dark:border-white/10 rounded-2xl p-6 shadow-sm">
+          <div className="bg-white/80 dark:bg-[#121524]/80 backdrop-blur-xl border border-gray-200 dark:border-white/10 rounded-2xl p-6 shadow-sm">
             <h3 className="font-bold text-gray-900 dark:text-white uppercase tracking-wider mb-6 text-sm">Risk Factors</h3>
             
             <div className="space-y-5">
@@ -294,7 +501,7 @@ export default function RequestDetails() {
 
           {/* What-If Analysis */}
           {req.whatIfScenarios.length > 0 && (
-            <div className="bg-white dark:bg-[#121524] border border-gray-200 dark:border-white/10 rounded-2xl p-6 shadow-sm">
+            <div className="bg-white/80 dark:bg-[#121524]/80 backdrop-blur-xl border border-gray-200 dark:border-white/10 rounded-2xl p-6 shadow-sm">
               <h3 className="font-bold text-gray-900 dark:text-white uppercase tracking-wider mb-1 text-sm flex items-center gap-2">
                 <Activity size={16} className="text-indigo-500" />
                 What-If Analysis
@@ -342,7 +549,7 @@ export default function RequestDetails() {
       {modalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setModalOpen(false)}></div>
-          <div className="bg-white dark:bg-[#121524] border border-gray-200 dark:border-white/10 rounded-2xl shadow-2xl w-full max-w-lg relative z-10 animate-hero-entry overflow-hidden">
+          <div className="bg-white/80 dark:bg-[#121524]/80 backdrop-blur-xl border border-gray-200 dark:border-white/10 rounded-2xl shadow-2xl w-full max-w-lg relative z-10 animate-hero-entry overflow-hidden">
             
             <div className="p-6 border-b border-gray-100 dark:border-white/10 flex items-center justify-between bg-gray-50 dark:bg-white/5">
               <h2 className="text-xl font-bold text-gray-900 dark:text-white uppercase tracking-wider">{req.recommendedAction.toUpperCase()} REQUEST</h2>

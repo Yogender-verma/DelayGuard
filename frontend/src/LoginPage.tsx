@@ -10,16 +10,12 @@ export default function LoginPage() {
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    const validEmails = ['admin@123', 'employee@123', 'citizen@123'];
+    const validEmails = ['employee@123'];
     if (validEmails.includes(email) && password === '12345') {
-      // Mock successful login
-      if (email === 'employee@123' || email === 'admin@123') {
-        navigate('/employee/dashboard');
-      } else {
-        navigate('/');
-      }
+      localStorage.setItem('delayguard_user', JSON.stringify({ email, role: 'employee' }));
+      navigate('/employee/dashboard');
     } else {
-      setError('Invalid email or password. Hint: admin@123, employee@123, or citizen@123 / 12345');
+      setError('Invalid email or password. Hint: employee@123 / 12345');
     }
   };
 
@@ -46,11 +42,9 @@ export default function LoginPage() {
           </p>
 
           <div className="mb-6 p-4 rounded-xl bg-fuchsia-50 dark:bg-fuchsia-500/10 border border-fuchsia-200 dark:border-fuchsia-500/20 relative z-10">
-            <h3 className="text-xs font-bold text-fuchsia-800 dark:text-fuchsia-300 uppercase tracking-wider mb-2">Demo Accounts</h3>
+            <h3 className="text-xs font-bold text-fuchsia-800 dark:text-fuchsia-300 uppercase tracking-wider mb-2">Demo Account</h3>
             <div className="grid grid-cols-2 gap-2 text-sm text-fuchsia-700 dark:text-fuchsia-200/80">
-              <p><strong>Admin:</strong> admin@123</p>
-              <p><strong>Employee:</strong> employee@123</p>
-              <p><strong>Citizen:</strong> citizen@123</p>
+              <p><strong>Email:</strong> employee@123</p>
               <p><strong>Password:</strong> 12345</p>
             </div>
           </div>
@@ -69,7 +63,7 @@ export default function LoginPage() {
                 id="email" 
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="admin@123, employee@123, citizen@123" 
+                placeholder="employee@123" 
                 className="w-full bg-gray-50 dark:bg-[#0a0c10]/50 border border-gray-300 dark:border-white/10 rounded-xl px-4 py-3 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-600 focus:outline-none focus:border-fuchsia-500/50 focus:ring-1 focus:ring-fuchsia-500/50 transition-all"
                 required
               />
