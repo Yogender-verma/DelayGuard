@@ -22,6 +22,8 @@ export default function MyRequests() {
   const [deptFilter, setDeptFilter] = useState('All');
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [extractedModalOpen, setExtractedModalOpen] = useState(false);
+  const [pendingExtractedData, setPendingExtractedData] = useState<any[]>([]);
 
   const departments = Array.from(new Set(requests.map(r => r.department))).sort();
 
@@ -96,7 +98,8 @@ export default function MyRequests() {
     const finishWithMock = () => {
       setTimeout(() => {
         const extracted = generateMockExtractedData();
-        importRequests(extracted);
+        setPendingExtractedData(extracted);
+        setExtractedModalOpen(true);
         setIsProcessing(false);
         if (fileInputRef.current) fileInputRef.current.value = '';
       }, 2000);
@@ -124,7 +127,8 @@ export default function MyRequests() {
         }
         
         if (data.length > 0 && typeof data[0] === 'object') {
-          importRequests(data);
+          setPendingExtractedData(data);
+          setExtractedModalOpen(true);
           setIsProcessing(false);
           if (fileInputRef.current) fileInputRef.current.value = '';
         } else {
@@ -328,6 +332,82 @@ export default function MyRequests() {
           </table>
         </div>
       </div>
+
+      {/* Extracted Data Modal */}
+      {extractedModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setExtractedModalOpen(false)}></div>
+          <div className="bg-white/80 dark:bg-[#121524]/80 backdrop-blur-xl border border-gray-200 dark:border-white/10 rounded-2xl shadow-2xl w-full max-w-2xl relative z-10 animate-hero-entry overflow-hidden flex flex-col max-h-[90vh]">
+            <div className="p-6 border-b border-gray-100 dark:border-white/10 flex items-center justify-between bg-gray-50 dark:bg-white/5 shrink-0">
+              <h2 className="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                <Search className="text-fuchsia-500" size={20} />
+                Extracted Data Preview
+              </h2>
+              <button onClick={() => setExtractedModalOpen(false)} className="text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white">
+                <X size={20} />
+              </button>
+            </div>
+            
+            <div className="p-6 overflow-y-auto custom-scrollbar">
+              <p className="text-gray-600 dark:text-gray-400 text-sm mb-4">
+                The AI has successfully parsed the unstructured document and identified the following service request records.
+              </p>
+              
+              <div className="space-y-4">
+                {pendingExtractedData.slice(0, 5).map((item, idx) => (
+                  <div key={item.id || idx} className="bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl p-4 flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-sm hover:shadow-md transition-shadow">
+                    <div>
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="font-bold text-gray-900 dark:text-white">{item.id || `REQ-EXT-${Math.floor(Math.random() * 9000)}`}</span>
+                        <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-red-100 text-red-700 dark:bg-red-500/20 dark:text-red-400">Identified</span>
+                      </div>
+                      <p className="font-medium text-gray-900 dark:text-white text-sm">{item.type || item.request_type || item.Subject || 'Service Request'}</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{item.department || item.Ministry || 'Unknown Dept'} • Stage: {item.current_stage || item.stage || 'Pending'}</p>
+                    </div>
+                    <div className="flex flex-row md:flex-col gap-4 md:gap-1 text-sm md:text-right">
+                      {item.sla_limit_days && (
+                        <div>
+                          <span className="text-gray-500 text-xs">Elapsed / SLA</span>
+                          <p className="font-semibold text-gray-900 dark:text-white">{item.elapsed_days || 0} / {item.sla_limit_days} days</p>
+                        </div>
+                      )}
+                      {item.backlog && (
+                        <div>
+                          <span className="text-gray-500 text-xs">Queue Backlog</span>
+                          <p className="font-semibold text-gray-900 dark:text-white">{item.backlog} cases</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))}
+                {pendingExtractedData.length > 5 && (
+                  <p className="text-center text-sm text-gray-500 italic mt-4">
+                    + {pendingExtractedData.length - 5} more records extracted...
+                  </p>
+                )}
+              </div>
+            </div>
+            
+            <div className="p-6 bg-gray-50 dark:bg-white/5 border-t border-gray-100 dark:border-white/10 flex justify-end gap-3 shrink-0">
+              <button 
+                onClick={() => setExtractedModalOpen(false)} 
+                className="px-5 py-2.5 rounded-xl font-semibold text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-white/10 transition-colors"
+              >
+                Discard
+              </button>
+              <button 
+                onClick={() => {
+                  importRequests(pendingExtractedData);
+                  setExtractedModalOpen(false);
+                }}
+                className="bg-gradient-to-r from-[#d946ef] to-[#8b5cf6] hover:from-[#c026d3] hover:to-[#7c3aed] text-white font-semibold py-2.5 px-6 rounded-xl transition-all shadow-md shadow-fuchsia-500/25"
+              >
+                Confirm & Import
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
